@@ -6,10 +6,11 @@
 //
 
 import SwiftUI
+import SDWebImageSwiftUI
 
 struct ProductGridItem : View {
     
-    @ObservedObject var viewModel: ProductViewModel 
+    @ObservedObject var viewModel: ProductViewModel
     
     let product: Product
     
@@ -17,10 +18,10 @@ struct ProductGridItem : View {
         NavigationLink(destination: ProductDetailView(product: product, viewModel: viewModel)) {
             VStack(alignment: .leading, spacing: 10) {
                 Group {
-                    Image("Logo-google-icon-PNG")
+                    
+                    WebImage(url: URL(string: product.image))
                         .resizable()
-                        .foregroundColor(.gray)
-                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 200, height: 200) 
                     
                     Text(product.title)
                         .lineLimit(2)

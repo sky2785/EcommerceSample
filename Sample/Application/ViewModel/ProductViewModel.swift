@@ -6,18 +6,17 @@
 //
 
 import SwiftUI
-import Combine
 import Foundation
 import Alamofire
 
+@MainActor
 class ProductViewModel: ObservableObject {
-    @Published var products : [Product] = []
+    @Published var products: [Product] = []
     @Published var selectedCategory: ProductCategory = .all
     @Published var isLoading = false
     @Published var cartItems: Set<Int> = []
     @Published var error: String?
     
-    private var cancellables = Set<AnyCancellable>()
     private let repository: ProductApiRepositoryProtocol
     
     var filteredProducts: [Product] {
@@ -25,7 +24,7 @@ class ProductViewModel: ObservableObject {
         return products.filter { $0.category == selectedCategory.rawValue }
     }
     
-    init(repository : ProductApiRepository) {
+    init(repository: ProductApiRepositoryProtocol) {
         self.repository = repository
     }
     
@@ -33,20 +32,15 @@ class ProductViewModel: ObservableObject {
         isLoading = true
         error = nil
         
-        repository.getProducts()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] completion in
-                self?.isLoading = false
-                if case .failure(let error) = completion {
-                    self?.error = error.localizedDescription
-                }
-            } receiveValue: { [weak self] products in
-                self?.products = products
+        Task {
+            do {
+                products = try await repository.getProducts()
+            } catch {
+                self.error = error.localizedDescription
             }
-            .store(in: &cancellables)
+            isLoading = false
+        }
     }
-    
-    
     
     func toggleCart(for productId: Int) {
         if cartItems.contains(productId) {
@@ -61,4 +55,3 @@ class ProductViewModel: ObservableObject {
         return products.filter { $0.category == category.rawValue }.count
     }
 }
-

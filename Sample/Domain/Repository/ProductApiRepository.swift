@@ -7,23 +7,23 @@
 
 import Foundation
 import Alamofire
-import Combine
 
 class ProductApiRepository: ProductApiRepositoryProtocol {
-    func getProducts() -> AnyPublisher<[Product], NetworkError> {
-        print("HERE")
-        return AF.request(GetAllProducts())
-            .validate()
-            .publishDecodable(type: [Product].self)
-            .value()
-            .mapError{ error in
-                
-                if let statusCode = error.responseCode,
-                   let networkError = NetworkError.fromStatusCode(statusCode) {
-                    return networkError
-                }
-                return NetworkError.networkError(error.localizedDescription)
+    
+    func getProducts() async throws -> [Product] {
+        
+        do {
+            let response = try await AF.request(GetAllProducts())
+                .validate()
+                .serializingDecodable([Product].self)
+                .value
+            
+            return response
+        } catch {
+            if let afError = error as? AFError, let statusCode = afError.responseCode {
+                throw NetworkError.fromStatusCode(statusCode) ?? .networkError(error.localizedDescription)
             }
-            .eraseToAnyPublisher()
+            throw NetworkError.networkError(error.localizedDescription)
+        }
     }
 }

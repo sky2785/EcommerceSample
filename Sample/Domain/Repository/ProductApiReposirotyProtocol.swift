@@ -6,8 +6,7 @@
 //
 
 import Foundation
-import Combine
 
 protocol ProductApiRepositoryProtocol {
-    func getProducts() -> AnyPublisher<[Product], NetworkError>
+    func getProducts() async throws -> [Product]
 }
